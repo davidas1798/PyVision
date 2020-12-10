@@ -80,17 +80,17 @@ class PyImage:
         return image_copy
 
     def linear_transformation(self, sections):
-        image_copy = self
-        for i in range(sections):
+        image_copy = copy.deepcopy(self)
+        for i in range(0, len(sections), 4):
             print("Tramo " + str(i + 1))
-            xi = int(input("Xi: "))
-            xf = int(input("Xf: "))
-            yi = int(input("Yi: "))
-            yf = int(input("Yf: "))
+            xi = sections[i]
+            xf = sections[i+1]
+            yi = sections[i+2]
+            yf = sections[i+3]
 
             a = (yf - yi) / (xf - xi)
             b = yi - a * xi
-            LUT = self.histogram
+            LUT = list(range(256))
             for i in range(xi, xf):
                 LUT[i] = a * i + b
         for i in range(self.width):
@@ -100,10 +100,21 @@ class PyImage:
                 image_copy.putpixel((i, j), new_gray_value)
         return image_copy
 
-    def histogram_specification(self, reference_image_path):
-        reference_image = PyImage.open(reference_image_path)
-        reference_image.show_c_histogram()
-        image_copy = self
+    def equalize(self):
+        image_copy = copy.deepcopy(self)
+        LUT = [None] * len(self.histogram)
+        for i in range(len(self.histogram)):
+            LUT[i] = max(0, int(256 / (self.width * self.height) * self.c_histogram[i])- 1)
+        for i in range(self.width):
+            for j in range(self.height):
+                current_value = self.getpixel((i,j))
+                new_value = LUT[current_value]
+                image_copy.putpixel((i, j), new_value)
+        image_copy.update()
+        return image_copy
+
+    def histogram_specification(self, reference_image):
+        image_copy = copy.deepcopy(self)
         LUT = [None] * len(self.c_histogram)
         for i in range(len(self.c_histogram)):
             value = self.c_histogram[i]
@@ -122,7 +133,7 @@ class PyImage:
         return image_copy
 
     def difference(self, other_image):
-        image_copy = self
+        image_copy = copy.deepcopy(self)
         for i in range(self.width):
             for j in range(self.height):
                 current_pixel = self.getpixel((i, j))
@@ -201,12 +212,14 @@ class PyImage:
         image_copy.image = image_copy.image.convert(mode)
         return image_copy
     
-# imagen = PyImage.open(sys.argv[1])
-# imagen.show()
+imagen = PyImage.open(sys.argv[1])
+imagen.show()
+imagen.equalize().show_c_histogram()
 # imagen2 = PyImage.open(sys.argv[2])
+# imagen2.show_c_histogram()
 # imagen2.show()
 # imagen.difference_map(imagen2, 20).show()
-# other = imagen.histogram_specification(sys.argv[2])
+# imagen.histogram_specification(imagen2).show_c_histogram()
 # other_py_image = PyImage(other)
 # other_py_image.show()
 # other_py_image.show_c_histogram()
