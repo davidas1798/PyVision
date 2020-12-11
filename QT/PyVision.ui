@@ -53,8 +53,13 @@
     <property name="title">
      <string>Image</string>
     </property>
+    <addaction name="actionHistograma"/>
+    <addaction name="actionHistograma_acumulativo"/>
+    <addaction name="actionResumen"/>
+    <addaction name="separator"/>
     <addaction name="actionBinarizar_2"/>
     <addaction name="actionCambiar_brillo_y_contraste_2"/>
+    <addaction name="actionEcualizar"/>
     <addaction name="actionEspecificar_histograma"/>
     <addaction name="actionImagen_diferencia"/>
     <addaction name="actionMapa_de_cambios"/>
@@ -168,6 +173,26 @@
   <action name="actionTransformaci_n_lineal_por_tramos">
    <property name="text">
     <string>Transformación lineal por tramos</string>
+   </property>
+  </action>
+  <action name="actionEcualizar">
+   <property name="text">
+    <string>Ecualizar</string>
+   </property>
+  </action>
+  <action name="actionResumen">
+   <property name="text">
+    <string>Resumen</string>
+   </property>
+  </action>
+  <action name="actionHistograma">
+   <property name="text">
+    <string>Histograma</string>
+   </property>
+  </action>
+  <action name="actionHistograma_acumulativo">
+   <property name="text">
+    <string>Histograma acumulativo</string>
    </property>
   </action>
  </widget>
