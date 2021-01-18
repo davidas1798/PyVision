@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sn
+import math
 import copy
 
 # ANOTACIONES: 
@@ -19,7 +20,7 @@ class PyImage:
         self.width, self.height = self.image.size
         if(self.image.mode != 'L'):
             self.grayscale()
-        self.histogram = self.get_histogram()
+        self.histogram = self.image.histogram()
         self.brightness = self.get_brightness()
         self.contrast = self.get_contrast()
         self.c_histogram = [None] * len(self.histogram)
@@ -33,6 +34,9 @@ class PyImage:
         imagen = Image.open(path)
         pyimagen = PyImage(imagen)
         return pyimagen
+
+    def save(path):
+        self.image.save(path)
 
     def show(self):
         self.image.show()
@@ -52,7 +56,7 @@ class PyImage:
         LUT = [None] * len(self.histogram)
         for i in range(len(self.histogram)):
             LUT[i] = a * i + b
-        image_copy = self
+        image_copy = copy.deepcopy(self)
         for i in range(image_copy.width):
             for j in range(image_copy.height):
                 gray_value = image_copy.getpixel((i, j))
@@ -62,15 +66,16 @@ class PyImage:
                 elif(new_gray_value < 0):
                     new_gray_value = 0
                 image_copy.putpixel((i, j), new_gray_value)
+        image_copy.update()
         return image_copy
 
-    def binary(self, umbral):
+    def binary(self, umbral, H, L):
         LUT = [None] * len(self.histogram)
         for i in range(umbral):
-            LUT[i] = 0
+            LUT[i] = L
         for i in range(umbral, len(self.histogram)):
-            LUT[i] = 255
-        image_copy = self
+            LUT[i] = H
+        image_copy = copy.deepcopy(self)
         for i in range(image_copy.width):
             for j in range(image_copy.height):
                 gray_value = image_copy.getpixel((i,j))
@@ -92,12 +97,14 @@ class PyImage:
             b = yi - a * xi
             LUT = list(range(256))
             for i in range(xi, xf):
-                LUT[i] = a * i + b
+                LUT[i] = int(a * i + b)
+            print(LUT)
         for i in range(self.width):
             for j in range(self.height):
-                gray_value = image_copy.getpixel((i, j))
+                gray_value = self.getpixel((i, j))
                 new_gray_value = int(LUT[gray_value])
                 image_copy.putpixel((i, j), new_gray_value)
+        image_copy.update()
         return image_copy
 
     def equalize(self):
@@ -132,6 +139,19 @@ class PyImage:
         image_copy.update()
         return image_copy
 
+    def gamma_correction(self, gamma):
+        image_copy = copy.deepcopy(self)
+        LUT = [None] * len(self.histogram)
+        for i in range(len(LUT)):
+            LUT[i] = int(i ** gamma)
+        for i in range(self.width):
+            for j in range(self.height):
+                gray_value = self.getpixel((i, j))
+                new_gray_value = LUT[gray_value]
+                image_copy.putpixel((i, j), new_gray_value)
+        image_copy.update()
+        return image_copy
+
     def difference(self, other_image):
         image_copy = copy.deepcopy(self)
         for i in range(self.width):
@@ -159,6 +179,74 @@ class PyImage:
                     image_copy.putpixel((i, j), current_pixel_rgb)
         return image_copy
 
+    def vertical_flip(self):
+        image_copy = copy.deepcopy(self)
+        for i in range(self.width):
+            for j in range(self.height):
+                pixel = self.getpixel((i, j))
+                image_copy.putpixel((self.width - 1 - i, j), pixel)
+        image_copy.update()
+        return image_copy
+
+    def horizontal_flip(self):
+        image_copy = copy.deepcopy(self)
+        for i in range(self.width):
+            for j in range(self.height):
+                pixel = self.getpixel((i, j))
+                image_copy.putpixel((i, self.height - 1 - j), pixel)
+        image_copy.update()
+        return image_copy
+
+    def transpose(self):
+        image_copy = copy.deepcopy(self)
+        for i in range(self.width):
+            for j in range(self.height):
+                pixel = self.getpixel((i, j))
+                image_copy.putpixel((j, i), pixel)
+        image_copy.update()
+        return image_copy
+
+    def ninety_rotation(self):
+        image_copy = copy.deepcopy(self)
+        for i in range(self.width):
+            for j in range(self.height):
+                pixel = self.getpixel((i, j))
+                image_copy.putpixel((self.height - 1 - j, i), pixel)
+        image_copy.update()
+        return image_copy
+
+    def resize(self, x_resize, y_resize, mode):
+        new_width = x_resize * self.width // 100
+        new_height = y_resize * self.height // 100
+
+        new_pil_image = Image.new('L', (new_width, new_height))
+        new_image = PyImage(new_pil_image)
+        # mode = 0 => vecino más cercano
+        # mode = 1 => bilineal
+        if(not mode):
+            for i in range(new_image.width):
+                for j in range(new_image.height):
+                    new_x = int(i / (x_resize / 100))
+                    new_y = int(j / (y_resize / 100))
+                    pixel = self.getpixel((new_x, new_y))
+                    new_image.putpixel((i, j), pixel)
+        else:
+            for i in range(new_image.width):
+                for j in range(new_image.height):
+                    x = i / (x_resize / 100)
+                    y = j / (y_resize / 100)
+                    X = i // (x_resize / 100)
+                    Y = j // (y_resize / 100)
+                    p = x - X
+                    q = y - Y
+                    A = self.getpixel((X, Y + 1))
+                    B = self.getpixel((X + 1, Y + 1))
+                    C = self.getpixel((X, Y))
+                    D = self.getpixel((X + 1, Y))
+                    pixel = int(C + (D - C) * p + (A - C) * q + (B + C - A - D) * p * q)
+                    new_image.putpixel((i, j), pixel)
+        return new_image
+
     def max_gray(self):
         image_copy = self.image
         maximo = np.max(np.asarray(image_copy))
@@ -167,7 +255,6 @@ class PyImage:
     def min_gray(self):
         image_copy = self.image
         minimo = np.min(np.asarray(image_copy))
-        np.asarray(image_copy)
         return minimo
 
     def get_histogram(self):
@@ -198,11 +285,26 @@ class PyImage:
 
         return result
 
+    def get_entropy(self):
+        result = 0 
+        for i in range(len(self.histogram)):
+            p = self.histogram[i] / self.width * self.height
+            if(p == 0):
+                p = 0.001
+            result += p * math.log(p, 2)
+        return -result
+
     def get_image(self):
         return self.image
 
     def getpixel(self, xy):
-        return self.image.getpixel(xy)
+        x = xy[0]
+        y = xy[1]
+        if xy[0] >= self.width:
+            x = self.width - 1
+        if xy[1] >= self.height:
+            y = self.height - 1
+        return self.image.getpixel((x, y))
 
     def putpixel(self, xy, pixel):
         self.image.putpixel(xy, pixel)
@@ -211,19 +313,9 @@ class PyImage:
         image_copy = self
         image_copy.image = image_copy.image.convert(mode)
         return image_copy
-    
-imagen = PyImage.open(sys.argv[1])
-imagen.show()
-imagen.equalize().show_c_histogram()
-# imagen2 = PyImage.open(sys.argv[2])
-# imagen2.show_c_histogram()
-# imagen2.show()
-# imagen.difference_map(imagen2, 20).show()
-# imagen.histogram_specification(imagen2).show_c_histogram()
-# other_py_image = PyImage(other)
-# other_py_image.show()
-# other_py_image.show_c_histogram()
-#print(imagen.min_gray())
-#print(imagen.max_gray())
-#imagen.linear_transformation(2).show()
-#print(len(imagen.histogram))
+
+
+image = PyImage.open(sys.argv[1])
+image.show()
+image.resize(200,200, 0).show()
+image.resize(200,200, 1).show()

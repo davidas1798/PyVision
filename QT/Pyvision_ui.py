@@ -78,6 +78,8 @@ class Ui_MainWindow(object):
         self.actionHistograma.setObjectName("actionHistograma")
         self.actionHistograma_acumulativo = QtWidgets.QAction(MainWindow)
         self.actionHistograma_acumulativo.setObjectName("actionHistograma_acumulativo")
+        self.actionCorrecci_n_gamma = QtWidgets.QAction(MainWindow)
+        self.actionCorrecci_n_gamma.setObjectName("actionCorrecci_n_gamma")
         self.menuFile.addAction(self.action_Open)
         self.menuFile.addAction(self.action_Close)
         self.menuFile.addAction(self.action_Close_all)
@@ -97,6 +99,7 @@ class Ui_MainWindow(object):
         self.menuImage.addSeparator()
         self.menuImage.addAction(self.actionBinarizar_2)
         self.menuImage.addAction(self.actionCambiar_brillo_y_contraste_2)
+        self.menuImage.addAction(self.actionCorrecci_n_gamma)
         self.menuImage.addAction(self.actionEcualizar)
         self.menuImage.addAction(self.actionEspecificar_histograma)
         self.menuImage.addAction(self.actionImagen_diferencia)
@@ -140,6 +143,7 @@ class Ui_MainWindow(object):
         self.actionResumen.setText(_translate("MainWindow", "Resumen"))
         self.actionHistograma.setText(_translate("MainWindow", "Histograma"))
         self.actionHistograma_acumulativo.setText(_translate("MainWindow", "Histograma acumulativo"))
+        self.actionCorrecci_n_gamma.setText(_translate("MainWindow", "Corrección gamma"))
 
 
 if __name__ == "__main__":

@@ -59,6 +59,7 @@
     <addaction name="separator"/>
     <addaction name="actionBinarizar_2"/>
     <addaction name="actionCambiar_brillo_y_contraste_2"/>
+    <addaction name="actionCorrecci_n_gamma"/>
     <addaction name="actionEcualizar"/>
     <addaction name="actionEspecificar_histograma"/>
     <addaction name="actionImagen_diferencia"/>
@@ -193,6 +194,11 @@
   <action name="actionHistograma_acumulativo">
    <property name="text">
     <string>Histograma acumulativo</string>
+   </property>
+  </action>
+  <action name="actionCorrecci_n_gamma">
+   <property name="text">
+    <string>Corrección gamma</string>
    </property>
   </action>
  </widget>
