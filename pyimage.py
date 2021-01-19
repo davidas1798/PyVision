@@ -14,6 +14,7 @@ import copy
 class PyImage:
     def __init__(self, pil_image):
         self.image = pil_image
+        self.blank_pixels = 0
         self.update()
     
     def update(self):
@@ -179,7 +180,7 @@ class PyImage:
                     image_copy.putpixel((i, j), current_pixel_rgb)
         return image_copy
 
-    def vertical_flip(self):
+    def horizontal_flip(self):
         image_copy = copy.deepcopy(self)
         for i in range(self.width):
             for j in range(self.height):
@@ -188,7 +189,7 @@ class PyImage:
         image_copy.update()
         return image_copy
 
-    def horizontal_flip(self):
+    def vertical_flip(self):
         image_copy = copy.deepcopy(self)
         for i in range(self.width):
             for j in range(self.height):
@@ -206,14 +207,23 @@ class PyImage:
         image_copy.update()
         return image_copy
 
-    def ninety_rotation(self):
-        image_copy = copy.deepcopy(self)
-        for i in range(self.width):
-            for j in range(self.height):
-                pixel = self.getpixel((i, j))
-                image_copy.putpixel((self.height - 1 - j, i), pixel)
-        image_copy.update()
-        return image_copy
+    def ninety_rotation(self, times, direction):
+        image_end = copy.deepcopy(self)     # esto hay que cambiarlo
+        for k in range(times):
+            image_copy = copy.deepcopy(image_end)
+            if not direction:
+                for i in range(image_copy.width):
+                    for j in range(image_copy.height):
+                        pixel = image_copy.getpixel((i, j))
+                        image_end.putpixel((self.height - 1 - j, i), pixel)
+            else:
+                for i in range(self.width):
+                    for j in range(self.height):
+                        pixel = image_copy.getpixel((i, j))
+                        image_end.putpixel((j, self.width - 1 - i), pixel)
+
+        image_end.update()
+        return image_end
 
     def resize(self, x_resize, y_resize, mode):
         new_width = x_resize * self.width // 100
@@ -245,7 +255,77 @@ class PyImage:
                     D = self.getpixel((X + 1, Y))
                     pixel = int(C + (D - C) * p + (A - C) * q + (B + C - A - D) * p * q)
                     new_image.putpixel((i, j), pixel)
+                    
+        new_image.update()
         return new_image
+
+    def rotation(self, alpha, direction, mode):
+        # direction = 0 => right
+        # direction = 1 => left
+        if(direction):
+            alpha = 360 - alpha
+
+        old_E = (0, 0)
+        old_F = (self.width, 0)
+        old_G = (self.width, self.height)
+        old_H = (0, self.height)
+        # Rotamos los puntos
+        E = PyImage.rotate_point(old_E, math.radians(alpha))
+        F = PyImage.rotate_point(old_F, math.radians(alpha))
+        G = PyImage.rotate_point(old_G, math.radians(alpha))
+        H = PyImage.rotate_point(old_H, math.radians(alpha))
+        # Calculamos el tamaño de la ventana al rotar la imagen
+        sizex = int(abs(max(E[0], F[0], G[0], H[0]) - min(E[0], F[0], G[0], H[0])))
+        sizey = int(abs(max(E[1], F[1], G[1], H[1]) - min(E[1], F[1], G[1], H[1])))
+        origen = (min(E[0], F[0], G[0], H[0]), min(E[1], F[1], G[1], H[1]))
+        # Factor para pasar de coordenadas a índices
+        factx = -origen[0]
+        facty = -origen[1]
+
+        new_pil_image = Image.new('L', (sizex, sizey))
+        new_image = PyImage(new_pil_image)
+        if(not mode):
+            for i in range(new_image.width):
+                for j in range(new_image.height):
+                    coordx = i - factx
+                    coordy = j - facty
+                    point = PyImage.rotate_point((coordx, coordy), math.radians(360-alpha))
+                    pixel = self.getpixel((int(point[0]), int(point[1])))
+                    new_image.putpixel((i, j), pixel)
+            new_image.set_blank_pixels(self.blank_pixels)
+        else:
+            count_blanks = 0
+            for i in range(new_image.width):
+                for j in range(new_image.height):
+                    coordx = i - factx
+                    coordy = j - facty
+                    point = PyImage.rotate_point((coordx, coordy), math.radians(360-alpha))
+                    x = point[0]
+                    y = point[1]
+                    X = math.floor(point[0])
+                    Y = math.floor(point[1])
+                    p = x - X
+                    q = y - Y
+                    A = self.getpixel((X, Y + 1))
+                    B = self.getpixel((X + 1, Y + 1))
+                    C = self.getpixel((X, Y))
+                    D = self.getpixel((X + 1, Y))
+                    correction = 0
+                    pixel = int(C+(D-C)*p+(A-C)*q+(B+C-A-D)*p*q)
+                    if pixel == 255:
+                        count_blanks += 1
+                    new_image.putpixel((i, j), pixel)
+            new_image.set_blank_pixels(count_blanks)
+        new_image.update()
+        new_image.histogram[255] -= new_image.blank_pixels
+        return new_image
+
+    @staticmethod
+    def rotate_point(xy, alpha):
+        new_xy = (xy[0] * math.cos(alpha) - xy[1] * math.sin(alpha),
+                    xy[0] * math.sin(alpha) + xy[1] * math.cos(alpha))
+        return new_xy
+
 
     def max_gray(self):
         image_copy = self.image
@@ -300,10 +380,12 @@ class PyImage:
     def getpixel(self, xy):
         x = xy[0]
         y = xy[1]
-        if xy[0] >= self.width:
-            x = self.width - 1
-        if xy[1] >= self.height:
-            y = self.height - 1
+        if x >= self.width or x < 0:
+            self.blank_pixels += 1
+            return 255
+        if y >= self.height or y < 0:
+            self.blank_pixels += 1
+            return 255
         return self.image.getpixel((x, y))
 
     def putpixel(self, xy, pixel):
@@ -314,8 +396,12 @@ class PyImage:
         image_copy.image = image_copy.image.convert(mode)
         return image_copy
 
+    def set_blank_pixels(self, blank_pixels):
+        self.blank_pixels = blank_pixels
 
-image = PyImage.open(sys.argv[1])
-image.show()
-image.resize(200,200, 0).show()
-image.resize(200,200, 1).show()
+
+
+
+#image = PyImage.open(sys.argv[1])
+#image.show()
+#image.rotation(90, 1, 1).show()

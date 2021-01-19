@@ -65,6 +65,15 @@
     <addaction name="actionImagen_diferencia"/>
     <addaction name="actionMapa_de_cambios"/>
     <addaction name="actionTransformaci_n_lineal_por_tramos"/>
+    <addaction name="separator"/>
+    <addaction name="actionEspejo_vertical"/>
+    <addaction name="actionEspejo_horizontal"/>
+    <addaction name="actionTraspuesta"/>
+    <addaction name="actionRotaci_n_m_ltiplo_de_90"/>
+    <addaction name="separator"/>
+    <addaction name="actionReescalar"/>
+    <addaction name="separator"/>
+    <addaction name="actionRotar"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -199,6 +208,36 @@
   <action name="actionCorrecci_n_gamma">
    <property name="text">
     <string>Corrección gamma</string>
+   </property>
+  </action>
+  <action name="actionEspejo_vertical">
+   <property name="text">
+    <string>Espejo vertical</string>
+   </property>
+  </action>
+  <action name="actionEspejo_horizontal">
+   <property name="text">
+    <string>Espejo horizontal</string>
+   </property>
+  </action>
+  <action name="actionTraspuesta">
+   <property name="text">
+    <string>Traspuesta</string>
+   </property>
+  </action>
+  <action name="actionRotaci_n_m_ltiplo_de_90">
+   <property name="text">
+    <string>Rotación múltiplo de 90º</string>
+   </property>
+  </action>
+  <action name="actionReescalar">
+   <property name="text">
+    <string>Reescalar</string>
+   </property>
+  </action>
+  <action name="actionRotar">
+   <property name="text">
+    <string>Rotar</string>
    </property>
   </action>
  </widget>
